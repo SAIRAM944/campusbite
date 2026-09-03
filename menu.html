@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusBite Waiter Panel</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f5f5f5;
+padding:20px;
+padding-top: 130px;
+}
+
+/* Header Styling */
+.cart-header {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+background: #ffffff;
+box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+display: flex;
+flex-direction: column;
+padding: 10px 30px;
+z-index: 1000;
+}
+
+.top-bar-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+width: 100%;
+}
+
+.cart-header h1 {
+color: #ff5722;
+font-size: 20px;
+}
+
+.header-buttons {
+display: flex;
+gap: 10px;
+align-items: center;
+}
+
+.cart-btn, .notification-bell-btn {
+background: #ff5722;
+color: white;
+border: none;
+padding: 8px 15px;
+border-radius: 8px;
+cursor: pointer;
+font-size: 14px;
+font-weight: bold;
+display: flex;
+align-items: center;
+gap: 6px;
+position: relative;
+}
+
+.notification-bell-btn { background: #ffc107; color: #333; }
+.cart-btn:hover { background: #e64a19; }
+.notification-bell-btn:hover { background: #e0a800; }
+
+.badge-count {
+background: #dc3545;
+color: white;
+font-size: 11px;
+padding: 2px 6px;
+border-radius: 50%;
+position: absolute;
+top: -5px;
+right: -5px;
+}
+
+/* Waiter Live Orders Bar */
+.waiter-panel {
+display: flex;
+align-items: center;
+gap: 10px;
+overflow-x: auto;
+width: 100%;
+padding-top: 8px;
+border-top: 1px solid #eee;
+margin-top: 5px;
+padding-bottom: 5px;
+}
+
+.waiter-panel span {
+font-size: 13px;
+font-weight: bold;
+color: #555;
+white-space: nowrap;
+}
+
+.table-badge {
+background: #007bff;
+color: white;
+padding: 5px 12px;
+border-radius: 20px;
+font-size: 12px;
+cursor: pointer;
+border: none;
+white-space: nowrap;
+font-weight: bold;
+transition: background 0.2s, opacity 0.2s;
+}
+
+.table-badge:hover { background: #0056b3; }
+
+/* Backdrop Overlay */
+.modal-backdrop {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.4);
+z-index: 1050;
+display: none;
+}
+.modal-backdrop.open { display: block; }
+
+/* Side Modals */
+.cart-modal, .order-details-modal, .notifications-modal {
+position: fixed;
+top: 0;
+right: -450px;
+width: 380px;
+height: 100%;
+background: white;
+box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+transition: right 0.3s ease;
+z-index: 1100;
+display: flex;
+flex-direction: column;
+padding: 20px;
+}
+
+.order-details-modal { width: 420px; }
+.notifications-modal { width: 450px; }
+
+.cart-modal.open, .order-details-modal.open, .notifications-modal.open {
+right: 0;
+}
+
+.cart-modal-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+border-bottom: 2px solid #eee;
+padding-bottom: 15px;
+}
+
+.close-btn {
+background: none;
+border: none;
+font-size: 24px;
+cursor: pointer;
+color: #333;
+padding: 0;
+}
+
+.close-btn:hover { background: none; color: #ff5722; }
+
+.cart-items-list {
+flex: 1;
+overflow-y: auto;
+margin-top: 15px;
+}
+
+.cart-item {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 10px 0;
+border-bottom: 1px solid #eee;
+}
+
+.cart-item img {
+width: 65px;
+height: 65px;
+object-fit: cover;
+border-radius: 8px;
+border: 1px solid #ccc;
+background: #fff;
+flex-shrink: 0;
+}
+
+.cart-item-details { flex: 1; }
+.cart-item-details h4 { font-size: 14px; color: #333; }
+.cart-item-details p { font-size: 13px; color: #e91e63; font-weight: bold; }
+
+.cart-item-actions {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.qty-btn {
+background: #ddd;
+border: none;
+width: 25px;
+height: 25px;
+border-radius: 4px;
+cursor: pointer;
+font-weight: bold;
+font-size: 14px;
+color: #333;
+}
+.qty-btn:hover { background: #ccc; }
+
+.delete-btn {
+background: #ff4d4d;
+color: white;
+border: none;
+padding: 5px 8px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 12px;
+}
+.delete-btn:hover { background: #cc0000; }
+
+.waiter-action-btn {
+border: none;
+padding: 6px 10px;
+border-radius: 6px;
+font-size: 11px;
+font-weight: bold;
+margin-top: 5px;
+text-transform: uppercase;
+}
+
+.status-ready-badge { background: #17a2b8; color: #fff; cursor: pointer; }
+.status-ready-badge:hover { background: #138496; }
+.status-served-badge { background: #28a745; color: #fff; cursor: default; }
+
+.cart-footer {
+border-top: 2px solid #eee;
+padding-top: 15px;
+}
+
+.total-section {
+display: flex;
+justify-content: space-between;
+font-size: 18px;
+font-weight: bold;
+margin-bottom: 15px;
+}
+
+.place-order-btn {
+width: 100%;
+background: #28a745;
+color: white;
+border: none;
+padding: 12px;
+border-radius: 8px;
+font-size: 16px;
+font-weight: bold;
+cursor: pointer;
+}
+.place-order-btn:hover { background: #218838; }
+
+.payment-btns {
+display: flex;
+gap: 10px;
+margin-top: 10px;
+}
+
+.phonepe-btn {
+flex: 1;
+background: #5f259f;
+color: white;
+border: none;
+padding: 10px;
+border-radius: 8px;
+font-weight: bold;
+cursor: pointer;
+font-size: 14px;
+}
+.phonepe-btn:hover { background: #4a1d7c; }
+
+.cash-btn {
+flex: 1;
+background: #ffc107;
+color: #333;
+border: none;
+padding: 10px;
+border-radius: 8px;
+font-weight: bold;
+cursor: pointer;
+font-size: 14px;
+}
+.cash-btn:hover { background: #e0a800; }
+
+.payment-btns.disabled {
+opacity: 0.4;
+pointer-events: none;
+}
+
+/* Toast Notification Styling */
+#notification-container {
+position: fixed;
+bottom: 20px;
+right: 20px;
+z-index: 9999;
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.toast-notification {
+background: #17a2b8;
+color: white;
+padding: 12px 18px;
+border-radius: 8px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+font-size: 14px;
+font-weight: bold;
+display: flex;
+align-items: center;
+gap: 10px;
+animation: slideIn 0.3s ease;
+min-width: 250px;
+}
+
+@keyframes slideIn {
+from { transform: translateX(100%); opacity: 0; }
+to { transform: translateX(0); opacity: 1; }
+}
+
+h2{
+margin:30px 0 15px;
+color:#ff5722;
+text-align:center;
+}
+
+.menu{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+max-width: 1200px;
+margin: 0 auto;
+}
+
+.card{
+background:#fff;
+border-radius:15px;
+overflow:hidden;
+box-shadow:0 5px 15px rgba(0,0,0,.2);
+padding-bottom:15px;
+text-align:center;
+}
+
+.card img{
+width:100%;
+height:190px;
+object-fit: contain;
+background: #ffffff;
+border-bottom: 1px solid #eee;
+}
+
+.card h3{ margin:10px 0; }
+
+.price{
+font-size:20px;
+color:#e91e63;
+font-weight:bold;
+}
+
+.card button{
+margin-top:10px;
+padding:10px 20px;
+background:#28a745;
+border:none;
+color:#fff;
+border-radius:8px;
+cursor:pointer;
+font-size:16px;
+}
+.card button:hover{ background:#218838; }
+</style>
+</head>
+
+<body>
+
+<!-- Backdrop for Modals -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeAllModals()"></div>
+
+<!-- Header -->
+<div class="cart-header">
+<div class="top-bar-row">
+<h1>CampusBite</h1>
+<div class="header-buttons">
+<button class="notification-bell-btn" onclick="toggleNotificationsModal()">
+🔔 Notifications <span id="notification-badge" class="badge-count" style="display:none;">0</span>
+</button>
+<button class="cart-btn" onclick="toggleCart()">🛒 Cart (<span id="cart-count">0</span>)</button>
+</div>
+</div>
+<div class="waiter-panel">
+<span>Active Tables:</span>
+<div id="waiterTableList" style="display: flex; gap: 8px; overflow-x: auto;">
+<span style="color: #888; font-size: 12px; font-weight: normal;">No active orders</span>
+</div>
+</div>
+</div>
+
+<div id="notification-container"></div>
+
+<!-- Cart Modal -->
+<div class="cart-modal" id="cartModal">
+<div class="cart-modal-header">
+<h2>Order Summary</h2>
+<button class="close-btn" onclick="toggleCart()">&times;</button>
+</div>
+<div class="cart-items-list" id="cartItemsList">
+<p style="text-align:center; color:#888; margin-top:20px;">No items in cart</p>
+</div>
+<div class="cart-footer">
+<div class="total-section">
+<span>Total:</span>
+<span id="cart-total">₹0</span>
+</div>
+<button class="place-order-btn" onclick="placeOrder()">Place Order</button>
+</div>
+</div>
+
+<!-- Notifications Modal -->
+<div class="notifications-modal" id="notificationsModal">
+<div class="cart-modal-header">
+<h2 style="margin:0; font-size:18px;">Waiter Alerts & Notifications</h2>
+<button class="close-btn" onclick="toggleNotificationsModal()">&times;</button>
+</div>
+<div class="cart-items-list" id="notificationsList">
+<p style="text-align:center; color:#888; margin-top:20px;">No notifications</p>
+</div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="order-details-modal" id="orderModal">
+<div class="cart-modal-header">
+<h2 id="modalTableTitle" style="margin:0; font-size:18px;">Table Details</h2>
+<button class="close-btn" onclick="toggleOrderModal()">&times;</button>
+</div>
+<div class="cart-items-list" id="orderModalItemsList">
+</div>
+<div class="cart-footer">
+<div class="total-section">
+<span>Total:</span>
+<span id="orderModalTotal">₹0</span>
+</div>
+<p id="paymentWarning" style="text-align:center; font-size:12px; font-weight:bold; margin-bottom:8px; color:#d9534f; display:none;">⚠️ Payment locked: All items must be served first!</p>
+<p style="text-align:center; font-size:13px; font-weight:bold; margin-bottom:8px; color:#555;">Complete Payment via:</p>
+<div class="payment-btns" id="paymentButtonsContainer">
+<button class="phonepe-btn" onclick="completePayment('PhonePe')">PhonePe</button>
+<button class="cash-btn" onclick="completePayment('Cash')">Cash</button>
+</div>
+</div>
+</div>
+
+<!-- Menu Section: all CampusBite items are directly embedded in this HTML -->
+<h2>Pizza</h2>
+<div class="menu">
+<div class="card" data-type="Non-Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZpaAXrqFomkAQB9g1m9gUySP1k1vsn0eJU21-nlR3wA4cFQV_pnWXGbJN&amp;s=10" alt="Butter Chicken Crust Pizza" loading="lazy">
+<h3>Butter Chicken Crust Pizza</h3>
+<p class="price">₹110</p>
+<button onclick="addToCart('Butter Chicken Crust Pizza', 110, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZpaAXrqFomkAQB9g1m9gUySP1k1vsn0eJU21-nlR3wA4cFQV_pnWXGbJN&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://cdn2.clevup.in/360704/65211119-4d82-4a5e-ae7c-aeb58461a911-1774014883933.png?width=600&amp;format=webp" alt="Royal Tandoori Treat Pizza" loading="lazy">
+<h3>Royal Tandoori Treat Pizza</h3>
+<p class="price">₹110</p>
+<button onclick="addToCart('Royal Tandoori Treat Pizza', 110, 'https://cdn2.clevup.in/360704/65211119-4d82-4a5e-ae7c-aeb58461a911-1774014883933.png?width=600&format=webp')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://static.vecteezy.com/system/resources/thumbnails/046/883/679/small/delicious-bbq-chicken-pizza-with-leftover-chicken-served-on-wooden-board-photo.jpeg" alt="BBQ Chicken Blaze Pizza" loading="lazy">
+<h3>BBQ Chicken Blaze Pizza</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('BBQ Chicken Blaze Pizza', 109, 'https://static.vecteezy.com/system/resources/thumbnails/046/883/679/small/delicious-bbq-chicken-pizza-with-leftover-chicken-served-on-wooden-board-photo.jpeg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://www.shutterstock.com/image-photo/meat-pizza-on-tray-600w-2434010499.jpg" alt="Meat Lover Feast Pizza" loading="lazy">
+<h3>Meat Lover Feast Pizza</h3>
+<p class="price">₹120</p>
+<button onclick="addToCart('Meat Lover Feast Pizza', 120, 'https://www.shutterstock.com/image-photo/meat-pizza-on-tray-600w-2434010499.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://www.onestalove.in/wp-content/uploads/2021/08/onesta_menu_Classic_Margherita.png" alt="Classic Margherita Pizza" loading="lazy">
+<h3>Classic Margherita Pizza</h3>
+<p class="price">₹70</p>
+<button onclick="addToCart('Classic Margherita Pizza', 70, 'https://www.onestalove.in/wp-content/uploads/2021/08/onesta_menu_Classic_Margherita.png')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://b.zmtcdn.com/data/dish_photos/167/15f4d6e7d61beea216af62f509e16167.jpeg" alt="Garlic Zaika Pizza" loading="lazy">
+<h3>Garlic Zaika Pizza</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Garlic Zaika Pizza', 99, 'https://b.zmtcdn.com/data/dish_photos/167/15f4d6e7d61beea216af62f509e16167.jpeg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://cdn.apartmenttherapy.info/image/upload/v1559190008/k/archive/8d90a437304e47696110f6b3ba53d550dbb89fe2.jpg" alt="Veggie Supreme Pizza" loading="lazy">
+<h3>Veggie Supreme Pizza</h3>
+<p class="price">₹110</p>
+<button onclick="addToCart('Veggie Supreme Pizza', 110, 'https://cdn.apartmenttherapy.info/image/upload/v1559190008/k/archive/8d90a437304e47696110f6b3ba53d550dbb89fe2.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://b.zmtcdn.com/data/dish_photos/d22/0a49c47c2393b8594c7137b64738ad22.png?fit=around%7C200%3A200&amp;crop=200%3A200%3B%2A%2C%2A" alt="Paneer Paradise Pizza" loading="lazy">
+<h3>Paneer Paradise Pizza</h3>
+<p class="price">₹120</p>
+<button onclick="addToCart('Paneer Paradise Pizza', 120, 'https://b.zmtcdn.com/data/dish_photos/d22/0a49c47c2393b8594c7137b64738ad22.png?fit=around%7C200%3A200&crop=200%3A200%3B%2A%2C%2A')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://static.toiimg.com/thumb/59863239.cms?width=1200&amp;height=900" alt="Golden Corn Pizza" loading="lazy">
+<h3>Golden Corn Pizza</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Golden Corn Pizza', 109, 'https://static.toiimg.com/thumb/59863239.cms?width=1200&height=900')">Add to Cart</button>
+</div>
+</div>
+<h2>Burger</h2>
+<div class="menu">
+<div class="card" data-type="Non-Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWUOYDpz4TFab8LDgop9C6xRMIVSXyx1jRciGsbf9hu_NonOXhVzqzhGjv&amp;s=10" alt="Tandoori Zing Burger" loading="lazy">
+<h3>Tandoori Zing Burger</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Tandoori Zing Burger', 99, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWUOYDpz4TFab8LDgop9C6xRMIVSXyx1jRciGsbf9hu_NonOXhVzqzhGjv&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://insearchofyummyness.com/wp-content/uploads/2014/07/Tex-Mex-Chicken-Burger.jpg" alt="Tex-Mex Chicken Burger" loading="lazy">
+<h3>Tex-Mex Chicken Burger</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Tex-Mex Chicken Burger', 99, 'https://insearchofyummyness.com/wp-content/uploads/2014/07/Tex-Mex-Chicken-Burger.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://ichef.bbci.co.uk/food/ic/food_16x9_1600/recipes/garlic_churrasco_chicken_78910_16x9.jpg" alt="The Garlic Rooster Burger" loading="lazy">
+<h3>The Garlic Rooster Burger</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('The Garlic Rooster Burger', 99, 'https://ichef.bbci.co.uk/food/ic/food_16x9_1600/recipes/garlic_churrasco_chicken_78910_16x9.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://hips.hearstapps.com/hmg-prod/images/chicken-burgers-lead-667b185b5c64f.jpg" alt="Special Chicken Burger" loading="lazy">
+<h3>Special Chicken Burger</h3>
+<p class="price">₹110</p>
+<button onclick="addToCart('Special Chicken Burger', 110, 'https://hips.hearstapps.com/hmg-prod/images/chicken-burgers-lead-667b185b5c64f.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Crispy-o-Veg Burger" loading="lazy">
+<h3>Crispy-o-Veg Burger</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Crispy-o-Veg Burger', 89, 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHY8jgaWDVXAPkPmBocCOSQKFjnHOUED1cwa14NYOBBgAz430Cdige3io1&amp;s=10" alt="Herb &#x27;n&#x27; Heat Burger" loading="lazy">
+<h3>Herb &#x27;n&#x27; Heat Burger</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart("Herb 'n' Heat Burger", 99, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHY8jgaWDVXAPkPmBocCOSQKFjnHOUED1cwa14NYOBBgAz430Cdige3io1&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTG9SRBuO7M0EjLko-fYbqPp0ZrZ404-V7nf3RF5SrRKVG1510GEfkkhjK8&amp;s=10" alt="Tex-Mex Veg Burger" loading="lazy">
+<h3>Tex-Mex Veg Burger</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Tex-Mex Veg Burger', 89, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTG9SRBuO7M0EjLko-fYbqPp0ZrZ404-V7nf3RF5SrRKVG1510GEfkkhjK8&s=10')">Add to Cart</button>
+</div>
+</div>
+<h2>Pasta</h2>
+<div class="menu">
+<div class="card" data-type="Non-Veg">
+<img src="https://www.saltandlavender.com/wp-content/uploads/2020/03/chicken-penne-pasta-recipe-4-720x1009.jpg" alt="Chicken Creamy Penne Pasta" loading="lazy">
+<h3>Chicken Creamy Penne Pasta</h3>
+<p class="price">₹120</p>
+<button onclick="addToCart('Chicken Creamy Penne Pasta', 120, 'https://www.saltandlavender.com/wp-content/uploads/2020/03/chicken-penne-pasta-recipe-4-720x1009.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Aglio Olio Chicken Pasta" loading="lazy">
+<h3>Aglio Olio Chicken Pasta</h3>
+<p class="price">₹120</p>
+<button onclick="addToCart('Aglio Olio Chicken Pasta', 120, 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://images.unsplash.com/photo-1608897013039-887f21d8c804?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Chicken Arrabbiata Pasta" loading="lazy">
+<h3>Chicken Arrabbiata Pasta</h3>
+<p class="price">₹110</p>
+<button onclick="addToCart('Chicken Arrabbiata Pasta', 110, 'https://images.unsplash.com/photo-1608897013039-887f21d8c804?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Veg Creamy Penne Pasta" loading="lazy">
+<h3>Veg Creamy Penne Pasta</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Veg Creamy Penne Pasta', 99, 'https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Alfredo Pasta" loading="lazy">
+<h3>Alfredo Pasta</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Alfredo Pasta', 99, 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Arrabbiata Pasta" loading="lazy">
+<h3>Arrabbiata Pasta</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Arrabbiata Pasta', 109, 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+</div>
+<h2>Milkshake</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://iambaker.net/wp-content/uploads/2024/06/Vanilla-milkshake-3.jpg" alt="Vanilla Milkshake" loading="lazy">
+<h3>Vanilla Milkshake</h3>
+<p class="price">₹69</p>
+<button onclick="addToCart('Vanilla Milkshake', 69, 'https://iambaker.net/wp-content/uploads/2024/06/Vanilla-milkshake-3.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Strawberry Milkshake" loading="lazy">
+<h3>Strawberry Milkshake</h3>
+<p class="price">₹79</p>
+<button onclick="addToCart('Strawberry Milkshake', 79, 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Passion Fruit Punch Milkshake" loading="lazy">
+<h3>Passion Fruit Punch Milkshake</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Passion Fruit Punch Milkshake', 99, 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://thumbs.dreamstime.com/b/enjoy-ultimate-oreo-milkshake-ai-generated-image-featuring-tall-glass-filled-creamy-blend-vanilla-ice-cream-276170279.jpg" alt="Oreo Milkshake" loading="lazy">
+<h3>Oreo Milkshake</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Oreo Milkshake', 99, 'https://thumbs.dreamstime.com/b/enjoy-ultimate-oreo-milkshake-ai-generated-image-featuring-tall-glass-filled-creamy-blend-vanilla-ice-cream-276170279.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://img.magnific.com/free-photo/ice-cream-with-cookie-table_140725-9225.jpg?semt=ais_hybrid&amp;w=740&amp;q=80" alt="Brownie With Chocolate Milkshake" loading="lazy">
+<h3>Brownie With Chocolate Milkshake</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Brownie With Chocolate Milkshake', 109, 'https://img.magnific.com/free-photo/ice-cream-with-cookie-table_140725-9225.jpg?semt=ais_hybrid&w=740&q=80')">Add to Cart</button>
+</div>
+</div>
+<h2>Falooda</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Fruits Falooda" loading="lazy">
+<h3>Fruits Falooda</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Fruits Falooda', 99, 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://i.pinimg.com/originals/29/db/7a/29db7afda22591ef4e2f8b99ebd37215.jpg?nii=t" alt="Royal Falooda" loading="lazy">
+<h3>Royal Falooda</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Royal Falooda', 109, 'https://i.pinimg.com/originals/29/db/7a/29db7afda22591ef4e2f8b99ebd37215.jpg?nii=t')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://i.pinimg.com/474x/52/b3/9a/52b39a0127d52c2fb3cad2d07311995d.jpg" alt="Dry Fruits Falooda" loading="lazy">
+<h3>Dry Fruits Falooda</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Dry Fruits Falooda', 99, 'https://i.pinimg.com/474x/52/b3/9a/52b39a0127d52c2fb3cad2d07311995d.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUug2IXC972U7pVIXdCY-5md-hEhl_GjwSVR2YtDB9XCbZryamSPptDbTf&amp;s=10" alt="Ice Cream Falooda" loading="lazy">
+<h3>Ice Cream Falooda</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Ice Cream Falooda', 89, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUug2IXC972U7pVIXdCY-5md-hEhl_GjwSVR2YtDB9XCbZryamSPptDbTf&s=10')">Add to Cart</button>
+</div>
+</div>
+<h2>Sandwich</h2>
+<div class="menu">
+<div class="card" data-type="Non-Veg">
+<img src="https://images.unsplash.com/photo-1700937244987-92488ab2ada5?fm=jpg&amp;q=60&amp;w=3000&amp;auto=format&amp;fit=crop&amp;ixlib=rb-4.1.0&amp;ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hpY2tlbiUyMHNhbmR3aWNofGVufDB8fDB8fHww" alt="Original Chicken Stacher Sandwich" loading="lazy">
+<h3>Original Chicken Stacher Sandwich</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Original Chicken Stacher Sandwich', 99, 'https://images.unsplash.com/photo-1700937244987-92488ab2ada5?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hpY2tlbiUyMHNhbmR3aWNofGVufDB8fDB8fHww')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://bsinthekitchen.files.wordpress.com/2010/07/sandwich-3.jpg" alt="Roasted Garlic Bite Sandwich" loading="lazy">
+<h3>Roasted Garlic Bite Sandwich</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Roasted Garlic Bite Sandwich', 109, 'https://bsinthekitchen.files.wordpress.com/2010/07/sandwich-3.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="The Fried Chicken Sandwich" loading="lazy">
+<h3>The Fried Chicken Sandwich</h3>
+<p class="price">₹120</p>
+<button onclick="addToCart('The Fried Chicken Sandwich', 120, 'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://static.toiimg.com/thumb/83740315.cms?width=1200&amp;height=900" alt="Urban Rooster Club Sandwich" loading="lazy">
+<h3>Urban Rooster Club Sandwich</h3>
+<p class="price">₹130</p>
+<button onclick="addToCart('Urban Rooster Club Sandwich', 130, 'https://static.toiimg.com/thumb/83740315.cms?width=1200&height=900')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://img.magnific.com/free-photo/side-view-club-sandwich-with-salted-cucumbers-lemon-olives-round-white-plate_176474-3049.jpg?semt=ais_hybrid&amp;w=740&amp;q=80" alt="Paneer Sandwich" loading="lazy">
+<h3>Paneer Sandwich</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Paneer Sandwich', 99, 'https://img.magnific.com/free-photo/side-view-club-sandwich-with-salted-cucumbers-lemon-olives-round-white-plate_176474-3049.jpg?semt=ais_hybrid&w=740&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://www.vegrecipesofindia.com/wp-content/uploads/2013/07/corn-sandwich-recipe-1.jpg" alt="Corn Delight Sandwich" loading="lazy">
+<h3>Corn Delight Sandwich</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Corn Delight Sandwich', 99, 'https://www.vegrecipesofindia.com/wp-content/uploads/2013/07/corn-sandwich-recipe-1.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1540713164800-4691238c1b73?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="The Garden Classic Sandwich" loading="lazy">
+<h3>The Garden Classic Sandwich</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('The Garden Classic Sandwich', 89, 'https://images.unsplash.com/photo-1540713164800-4691238c1b73?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://www.indianhealthyrecipes.com/wp-content/uploads/2021/06/paneer-sandwich-recipe.jpg" alt="Zesty Grilled Paneer Sandwich" loading="lazy">
+<h3>Zesty Grilled Paneer Sandwich</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Zesty Grilled Paneer Sandwich', 99, 'https://www.indianhealthyrecipes.com/wp-content/uploads/2021/06/paneer-sandwich-recipe.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Chocolate Sandwich">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy3GBoQixUYMmFs1lcfW2w1t_vM9wUlUOHKKnOulCyHrtOSZaDjbwJSF8&amp;s=10" alt="Chocolate Cheesy Sandwich" loading="lazy">
+<h3>Chocolate Cheesy Sandwich</h3>
+<p class="price">₹80</p>
+<button onclick="addToCart('Chocolate Cheesy Sandwich', 80, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy3GBoQixUYMmFs1lcfW2w1t_vM9wUlUOHKKnOulCyHrtOSZaDjbwJSF8&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Chocolate Sandwich">
+<img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Loaded Chocolate Sandwich" loading="lazy">
+<h3>Loaded Chocolate Sandwich</h3>
+<p class="price">₹69</p>
+<button onclick="addToCart('Loaded Chocolate Sandwich', 69, 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Chocolate Sandwich">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMLQCMB6YtqIT6OsMU8oibouSEEnxrwZEMSNFq0Gcs2Y7q1-yg5iUZjwo&amp;s=10" alt="Grilled Chocolate Sandwich" loading="lazy">
+<h3>Grilled Chocolate Sandwich</h3>
+<p class="price">₹69</p>
+<button onclick="addToCart('Grilled Chocolate Sandwich', 69, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMLQCMB6YtqIT6OsMU8oibouSEEnxrwZEMSNFq0Gcs2Y7q1-yg5iUZjwo&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Chocolate Sandwich">
+<img src="https://i-media.vyaparify.com/vcards/products/58244/product_1722950814.png" alt="KitKat Sandwich" loading="lazy">
+<h3>KitKat Sandwich</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('KitKat Sandwich', 99, 'https://i-media.vyaparify.com/vcards/products/58244/product_1722950814.png')">Add to Cart</button>
+</div>
+</div>
+<h2>Wraps</h2>
+<div class="menu">
+<div class="card" data-type="Non-Veg">
+<img src="https://img.magnific.com/premium-photo/chicken-apple-wraps-wooden-table_961875-315488.jpg?semt=ais_hybrid&amp;w=740&amp;q=80" alt="Chicken &#x27;n&#x27; Wrap" loading="lazy">
+<h3>Chicken &#x27;n&#x27; Wrap</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart("Chicken 'n' Wrap", 99, 'https://img.magnific.com/premium-photo/chicken-apple-wraps-wooden-table_961875-315488.jpg?semt=ais_hybrid&w=740&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://img.magnific.com/free-photo/savory-meat-wrap-with-fresh-vegetables_84443-85040.jpg?semt=ais_hybrid&amp;w=740&amp;q=80" alt="Tandoori Tango Wrap" loading="lazy">
+<h3>Tandoori Tango Wrap</h3>
+<p class="price">₹110</p>
+<button onclick="addToCart('Tandoori Tango Wrap', 110, 'https://img.magnific.com/free-photo/savory-meat-wrap-with-fresh-vegetables_84443-85040.jpg?semt=ais_hybrid&w=740&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ11o2oPLJxViuf_vZjWcnk5FbOHBohdDOC4B6EeMwRnewt7F3foxNNsG4J&amp;s=10" alt="Fried Chicken Wrap" loading="lazy">
+<h3>Fried Chicken Wrap</h3>
+<p class="price">₹120</p>
+<button onclick="addToCart('Fried Chicken Wrap', 120, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ11o2oPLJxViuf_vZjWcnk5FbOHBohdDOC4B6EeMwRnewt7F3foxNNsG4J&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://img.magnific.com/free-photo/burritos-wraps-with-chicken-vegetables-chicken-burrito-mexican-food_2829-6980.jpg?semt=ais_hybrid&amp;w=740&amp;q=80" alt="Veggie Delight Wrap" loading="lazy">
+<h3>Veggie Delight Wrap</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Veggie Delight Wrap', 89, 'https://img.magnific.com/free-photo/burritos-wraps-with-chicken-vegetables-chicken-burrito-mexican-food_2829-6980.jpg?semt=ais_hybrid&w=740&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://ministryofcurry.com/wp-content/uploads/2019/10/paneer-kathi-rolls-1-1-850x1133.jpg" alt="Paneer Milk Pocket Wrap" loading="lazy">
+<h3>Paneer Milk Pocket Wrap</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Paneer Milk Pocket Wrap', 99, 'https://ministryofcurry.com/wp-content/uploads/2019/10/paneer-kathi-rolls-1-1-850x1133.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://www.tarladalal.com/thumb/500x500/media/recipe/mainphoto/2025/10/20/Stuffed_Corn_and_Capsicum_Wrap.webp" alt="Corn Garlic Twist Wrap" loading="lazy">
+<h3>Corn Garlic Twist Wrap</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Corn Garlic Twist Wrap', 99, 'https://www.tarladalal.com/thumb/500x500/media/recipe/mainphoto/2025/10/20/Stuffed_Corn_and_Capsicum_Wrap.webp')">Add to Cart</button>
+</div>
+</div>
+<h2>Fried Chicken</h2>
+<div class="menu">
+<div class="card" data-type="Non-Veg">
+<img src="https://img-cdn.publive.online/fit-in/640x430/filters:format(webp)/sanjeev-kapoor/media/media_files/pip1BmOpZd1wO71LTA0P.JPG" alt="Peri Peri Chicken Popcorn" loading="lazy">
+<h3>Peri Peri Chicken Popcorn</h3>
+<p class="price">₹100</p>
+<button onclick="addToCart('Peri Peri Chicken Popcorn', 100, 'https://img-cdn.publive.online/fit-in/640x430/filters:format(webp)/sanjeev-kapoor/media/media_files/pip1BmOpZd1wO71LTA0P.JPG')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://img.magnific.com/free-photo/close-up-delicious-asian-food_23-2150535863.jpg?semt=ais_hybrid&amp;w=740&amp;q=80" alt="Dragon Chicken Popcorn" loading="lazy">
+<h3>Dragon Chicken Popcorn</h3>
+<p class="price">₹159</p>
+<button onclick="addToCart('Dragon Chicken Popcorn', 159, 'https://img.magnific.com/free-photo/close-up-delicious-asian-food_23-2150535863.jpg?semt=ais_hybrid&w=740&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://www.kannammacooks.com/wp-content/uploads/popcorn-chicken-recipe-baked-22.jpg" alt="Loaded Chicken Popcorn" loading="lazy">
+<h3>Loaded Chicken Popcorn</h3>
+<p class="price">₹149</p>
+<button onclick="addToCart('Loaded Chicken Popcorn', 149, 'https://www.kannammacooks.com/wp-content/uploads/popcorn-chicken-recipe-baked-22.jpg')">Add to Cart</button>
+</div>
+</div>
+<h2>French Fries</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShWrKJrOrFD7blXbqtKNKPo5d1Jdzr47I5XueTc4ppJA&amp;s=10" alt="Salted Fries" loading="lazy">
+<h3>Salted Fries</h3>
+<p class="price">₹60</p>
+<button onclick="addToCart('Salted Fries', 60, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShWrKJrOrFD7blXbqtKNKPo5d1Jdzr47I5XueTc4ppJA&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://www.shutterstock.com/image-photo/masala-fries-isolated-on-transparent-600w-2734324673.jpg" alt="Masala Fries" loading="lazy">
+<h3>Masala Fries</h3>
+<p class="price">₹70</p>
+<button onclick="addToCart('Masala Fries', 70, 'https://www.shutterstock.com/image-photo/masala-fries-isolated-on-transparent-600w-2734324673.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://hungritos.com/wp-content/uploads/2023/04/pri-peri-fries.png" alt="Peri Peri Fries" loading="lazy">
+<h3>Peri Peri Fries</h3>
+<p class="price">₹60</p>
+<button onclick="addToCart('Peri Peri Fries', 60, 'https://hungritos.com/wp-content/uploads/2023/04/pri-peri-fries.png')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2vTH22Bml-XkAVxL5wVDKg4WqAHI_Ucb6nYUnhYKMNdM0VyWYFAQ80Eds&amp;s=10" alt="Creamy Fries" loading="lazy">
+<h3>Creamy Fries</h3>
+<p class="price">₹79</p>
+<button onclick="addToCart('Creamy Fries', 79, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2vTH22Bml-XkAVxL5wVDKg4WqAHI_Ucb6nYUnhYKMNdM0VyWYFAQ80Eds&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJrEXXg1EEaUudCyk4eUoZQa4GZHDT8yoO2prxdCARLD2DAq8zjY9vkco&amp;s=10" alt="Masala Loaded Fries (with Chicken)" loading="lazy">
+<h3>Masala Loaded Fries (with Chicken)</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Masala Loaded Fries (with Chicken)', 109, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJrEXXg1EEaUudCyk4eUoZQa4GZHDT8yoO2prxdCARLD2DAq8zjY9vkco&s=10')">Add to Cart</button>
+</div>
+</div>
+<h2>Waffles</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/dw5g4i6mnrabithmymqm" alt="Belgian Chocolate White Waffle" loading="lazy">
+<h3>Belgian Chocolate White Waffle</h3>
+<p class="price">₹79</p>
+<button onclick="addToCart('Belgian Chocolate White Waffle', 79, 'https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/dw5g4i6mnrabithmymqm')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://media-assets.swiggy.com/swiggy/image/upload/f_auto,q_auto,fl_lossy/RX_THUMBNAIL/IMAGES/VENDOR/2025/8/1/e6c26c19-6df8-4955-9096-c62a2b445008_1162200.jpg" alt="Belgian Chocolate Milk Waffle" loading="lazy">
+<h3>Belgian Chocolate Milk Waffle</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Belgian Chocolate Milk Waffle', 89, 'https://media-assets.swiggy.com/swiggy/image/upload/f_auto,q_auto,fl_lossy/RX_THUMBNAIL/IMAGES/VENDOR/2025/8/1/e6c26c19-6df8-4955-9096-c62a2b445008_1162200.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://thehintofrosemary.com/wp-content/uploads/2019/12/chocolate-waffle-cover-pic-scaled.jpg" alt="Belgian Chocolate Dark Waffle" loading="lazy">
+<h3>Belgian Chocolate Dark Waffle</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Belgian Chocolate Dark Waffle', 89, 'https://thehintofrosemary.com/wp-content/uploads/2019/12/chocolate-waffle-cover-pic-scaled.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://i.ytimg.com/vi/YsImRwhE6Fc/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&amp;rs=AOn4CLDXnYw7kwM1UbnaGaccwsMM7hDZdw" alt="Dairy Milk Waffle" loading="lazy">
+<h3>Dairy Milk Waffle</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Dairy Milk Waffle', 99, 'https://i.ytimg.com/vi/YsImRwhE6Fc/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDXnYw7kwM1UbnaGaccwsMM7hDZdw')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://honeycastle.co.in/wp-content/uploads/2025/09/Classic-Waffle-Recipe-Debjanir-Rannaghar.jpg" alt="KitKat Waffle" loading="lazy">
+<h3>KitKat Waffle</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('KitKat Waffle', 99, 'https://honeycastle.co.in/wp-content/uploads/2025/09/Classic-Waffle-Recipe-Debjanir-Rannaghar.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://99pancakes.in/cdn/shop/files/Naughtynutellawaffle.jpg?v=1755018595" alt="Nutella Waffle" loading="lazy">
+<h3>Nutella Waffle</h3>
+<p class="price">₹79</p>
+<button onclick="addToCart('Nutella Waffle', 79, 'https://99pancakes.in/cdn/shop/files/Naughtynutellawaffle.jpg?v=1755018595')">Add to Cart</button>
+</div>
+</div>
+<h2>Quick Bites</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Vegetable Samosa" loading="lazy">
+<h3>Vegetable Samosa</h3>
+<p class="price">₹60</p>
+<button onclick="addToCart('Vegetable Samosa', 60, 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Punjabi Samosa" loading="lazy">
+<h3>Punjabi Samosa</h3>
+<p class="price">₹60</p>
+<button onclick="addToCart('Punjabi Samosa', 60, 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Sweet Corn Samosa" loading="lazy">
+<h3>Sweet Corn Samosa</h3>
+<p class="price">₹60</p>
+<button onclick="addToCart('Sweet Corn Samosa', 60, 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1619533306970-d8e6f1f5d502?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Butter Garlic Bread" loading="lazy">
+<h3>Butter Garlic Bread</h3>
+<p class="price">₹70</p>
+<button onclick="addToCart('Butter Garlic Bread', 70, 'https://images.unsplash.com/photo-1619533306970-d8e6f1f5d502?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Cheesy Garlic Bread" loading="lazy">
+<h3>Cheesy Garlic Bread</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Cheesy Garlic Bread', 89, 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+</div>
+<h2>Chicken Wings</h2>
+<div class="menu">
+<div class="card" data-type="Non-Veg">
+<img src="https://beatthebudget.com/wp-content/uploads/2021/04/Peri-Peri-Chicken-featured-image.jpg" alt="Peri Peri Wings" loading="lazy">
+<h3>Peri Peri Wings</h3>
+<p class="price">₹159</p>
+<button onclick="addToCart('Peri Peri Wings', 159, 'https://beatthebudget.com/wp-content/uploads/2021/04/Peri-Peri-Chicken-featured-image.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSY-_mzR9QvahUuNA2LmvL3IrqkEUfaRZhukt9IXv1DyMEFc9tm5GJnvQmq&amp;s=10" alt="Salted Wings" loading="lazy">
+<h3>Salted Wings</h3>
+<p class="price">₹150</p>
+<button onclick="addToCart('Salted Wings', 150, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSY-_mzR9QvahUuNA2LmvL3IrqkEUfaRZhukt9IXv1DyMEFc9tm5GJnvQmq&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Cotton Crispy Chicken (2 pcs)" loading="lazy">
+<h3>Cotton Crispy Chicken (2 pcs)</h3>
+<p class="price">₹149</p>
+<button onclick="addToCart('Cotton Crispy Chicken (2 pcs)', 149, 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+</div>
+<h2>Momos</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://cdn1.foodviva.com/static-content/food-images/snacks-recipes/veg-momos/veg-momos.jpg" alt="Veg Steam Momo&#x27;s" loading="lazy">
+<h3>Veg Steam Momo&#x27;s</h3>
+<p class="price">₹60</p>
+<button onclick="addToCart("Veg Steam Momo's", 60, 'https://cdn1.foodviva.com/static-content/food-images/snacks-recipes/veg-momos/veg-momos.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDJRKJVLxhMnpfO2CscAp0rfbLqPMLmSG5tE1fP6rGzPRhTaxHKdgRNms&amp;s=10" alt="Veg Fried Momo&#x27;s" loading="lazy">
+<h3>Veg Fried Momo&#x27;s</h3>
+<p class="price">₹70</p>
+<button onclick="addToCart("Veg Fried Momo's", 70, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDJRKJVLxhMnpfO2CscAp0rfbLqPMLmSG5tE1fP6rGzPRhTaxHKdgRNms&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://swadelazeez.com/wp-content/uploads/2024/12/images-5-10.jpg" alt="Paneer Steam Momo&#x27;s" loading="lazy">
+<h3>Paneer Steam Momo&#x27;s</h3>
+<p class="price">₹60</p>
+<button onclick="addToCart("Paneer Steam Momo's", 60, 'https://swadelazeez.com/wp-content/uploads/2024/12/images-5-10.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://storage.googleapis.com/shy-pub/360704/paneerfrymomos-1746271163610.webp" alt="Paneer Fried Momo&#x27;s" loading="lazy">
+<h3>Paneer Fried Momo&#x27;s</h3>
+<p class="price">₹70</p>
+<button onclick="addToCart("Paneer Fried Momo's", 70, 'https://storage.googleapis.com/shy-pub/360704/paneerfrymomos-1746271163610.webp')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa4b-QGOiDCpa867mIbs1V3tiJFnVwIJSgnFF1BPa4DLCvQftB4o2-YxeV&amp;s=10" alt="Chicken Steam Momo&#x27;s" loading="lazy">
+<h3>Chicken Steam Momo&#x27;s</h3>
+<p class="price">₹79</p>
+<button onclick="addToCart("Chicken Steam Momo's", 79, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa4b-QGOiDCpa867mIbs1V3tiJFnVwIJSgnFF1BPa4DLCvQftB4o2-YxeV&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYPPRNVJYF2dDcTZhlAcctJmUudG_EGPFOxKrOa6cTi7VE2EI00TCdcHeW&amp;s=10" alt="Chicken Fried Momo&#x27;s" loading="lazy">
+<h3>Chicken Fried Momo&#x27;s</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart("Chicken Fried Momo's", 89, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYPPRNVJYF2dDcTZhlAcctJmUudG_EGPFOxKrOa6cTi7VE2EI00TCdcHeW&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Non-Veg">
+<img src="https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_240,h_240/FOOD_CATALOG/IMAGES/CMS/2026/6/25/1339b73b-d1d7-4c95-acb2-92f528bcfbe9_f275c68a-5375-45b3-a599-86070220c998.jpg" alt="Chicken Nuggets Momo&#x27;s" loading="lazy">
+<h3>Chicken Nuggets Momo&#x27;s</h3>
+<p class="price">₹79</p>
+<button onclick="addToCart("Chicken Nuggets Momo's", 79, 'https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_240,h_240/FOOD_CATALOG/IMAGES/CMS/2026/6/25/1339b73b-d1d7-4c95-acb2-92f528bcfbe9_f275c68a-5375-45b3-a599-86070220c998.jpg')">Add to Cart</button>
+</div>
+</div>
+<h2>Thickshakes</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Choco Chip Thickshake" loading="lazy">
+<h3>Choco Chip Thickshake</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Choco Chip Thickshake', 99, 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1553177595-4de26388f86e?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Yummy Mango Thickshake" loading="lazy">
+<h3>Yummy Mango Thickshake</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Yummy Mango Thickshake', 109, 'https://images.unsplash.com/photo-1553177595-4de26388f86e?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1577805947697-89e18249d767?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Oreo Thickshake" loading="lazy">
+<h3>Oreo Thickshake</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('Oreo Thickshake', 99, 'https://images.unsplash.com/photo-1577805947697-89e18249d767?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="KitKat Thickshake" loading="lazy">
+<h3>KitKat Thickshake</h3>
+<p class="price">₹99</p>
+<button onclick="addToCart('KitKat Thickshake', 99, 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Butterscotch Thickshake" loading="lazy">
+<h3>Butterscotch Thickshake</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Butterscotch Thickshake', 109, 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+</div>
+<h2>Mocktails</h2>
+<div class="menu">
+<div class="card" data-type="Veg">
+<img src="https://thehealthfulideas.com/wp-content/uploads/2024/10/Lemon-Mocktail-11.jpg" alt="Lemonade Mocktail" loading="lazy">
+<h3>Lemonade Mocktail</h3>
+<p class="price">₹59</p>
+<button onclick="addToCart('Lemonade Mocktail', 59, 'https://thehealthfulideas.com/wp-content/uploads/2024/10/Lemon-Mocktail-11.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx5Cm1NBk2hRRdfLymb4HS8L0LC_mpsXx52rytfQA0LA&amp;s=10" alt="Mint Lime Mojito" loading="lazy">
+<h3>Mint Lime Mojito</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Mint Lime Mojito', 89, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx5Cm1NBk2hRRdfLymb4HS8L0LC_mpsXx52rytfQA0LA&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Aqua Splash Mojito" loading="lazy">
+<h3>Aqua Splash Mojito</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Aqua Splash Mojito', 89, 'https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=600&q=80')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvSxpRaVhg__JsrVwo8tO0IZyPXmwBdKsVab7Tfqp2t0Ic0OqIwW22OtE&amp;s=10" alt="Tropical Kiwi" loading="lazy">
+<h3>Tropical Kiwi</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Tropical Kiwi', 89, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvSxpRaVhg__JsrVwo8tO0IZyPXmwBdKsVab7Tfqp2t0Ic0OqIwW22OtE&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2nyGFx-CPE1hF3VzZZuVDjwZd_leHQLk0k8rLblAdpMzPu7dFBRZFqpY&amp;s=10" alt="Red Wine Mojito" loading="lazy">
+<h3>Red Wine Mojito</h3>
+<p class="price">₹109</p>
+<button onclick="addToCart('Red Wine Mojito', 109, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2nyGFx-CPE1hF3VzZZuVDjwZd_leHQLk0k8rLblAdpMzPu7dFBRZFqpY&s=10')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://www.girlversusdough.com/wp-content/uploads/2019/06/watermelon-mojito-3.jpg" alt="Watermelon Mojito" loading="lazy">
+<h3>Watermelon Mojito</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Watermelon Mojito', 89, 'https://www.girlversusdough.com/wp-content/uploads/2019/06/watermelon-mojito-3.jpg')">Add to Cart</button>
+</div>
+<div class="card" data-type="Veg">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShXCN_v927S4ViJeWmwhhUos-_KgBPusCSxXoNR7OUiGJPoa165-Vz2QC7&amp;s=10" alt="Green Apple Mojito" loading="lazy">
+<h3>Green Apple Mojito</h3>
+<p class="price">₹89</p>
+<button onclick="addToCart('Green Apple Mojito', 89, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShXCN_v927S4ViJeWmwhhUos-_KgBPusCSxXoNR7OUiGJPoa165-Vz2QC7&s=10')">Add to Cart</button>
+</div>
+</div>
+
+<!-- JavaScript Logic -->
+<script>
+let cart = [];
+let activeOrders = JSON.parse(localStorage.getItem('campusBiteOrders')) || {};
+let waiterNotifications = JSON.parse(localStorage.getItem('campusBiteNotifs')) || [];
+let selectedTableForView = null;
+
+function updateBackdrop() {
+const backdrop = document.getElementById('modalBackdrop');
+const cartOpen = document.getElementById('cartModal').classList.contains('open');
+const notifOpen = document.getElementById('notificationsModal').classList.contains('open');
+const orderOpen = document.getElementById('orderModal').classList.contains('open');
+
+if (cartOpen || notifOpen || orderOpen) {
+backdrop.classList.add('open');
+} else {
+backdrop.classList.remove('open');
+}
+}
+
+function closeAllModals() {
+document.getElementById('cartModal').classList.remove('open');
+document.getElementById('notificationsModal').classList.remove('open');
+document.getElementById('orderModal').classList.remove('open');
+selectedTableForView = null;
+updateWaiterPanel();
+updateBackdrop();
+}
+
+function toggleCart() { 
+document.getElementById('cartModal').classList.toggle('open');
+document.getElementById('notificationsModal').classList.remove('open');
+document.getElementById('orderModal').classList.remove('open');
+updateBackdrop();
+}
+
+function toggleNotificationsModal() { 
+document.getElementById('notificationsModal').classList.toggle('open'); 
+document.getElementById('cartModal').classList.remove('open');
+document.getElementById('orderModal').classList.remove('open');
+updateNotificationsUI();
+updateBackdrop();
+}
+
+function toggleOrderModal() {
+const modal = document.getElementById('orderModal');
+modal.classList.toggle('open');
+document.getElementById('cartModal').classList.remove('open');
+document.getElementById('notificationsModal').classList.remove('open');
+if (!modal.classList.contains('open')) {
+selectedTableForView = null;
+updateWaiterPanel();
+}
+updateBackdrop();
+}
+
+function addToCart(name, price, image) {
+const existingItem = cart.find(item => item.name === name);
+if (existingItem) { existingItem.quantity += 1; } 
+else { cart.push({ name, price, quantity: 1, image }); }
+updateCartUI();
+}
+
+function updateQuantity(name, change) {
+const item = cart.find(item => item.name === name);
+if (item) {
+item.quantity += change;
+if (item.quantity <= 0) { cart = cart.filter(cartItem => cartItem.name !== name); }
+}
+updateCartUI();
+}
+
+function removeItem(name) {
+cart = cart.filter(item => item.name !== name);
+updateCartUI();
+}
+
+function updateCartUI() {
+const cartCount = document.getElementById('cart-count');
+const cartItemsList = document.getElementById('cartItemsList');
+const cartTotal = document.getElementById('cart-total');
+
+let totalCount = 0;
+let totalPrice = 0;
+cartItemsList.innerHTML = '';
+
+if (cart.length === 0) {
+cartItemsList.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">No items in cart</p>';
+} else {
+cart.forEach(item => {
+totalCount += item.quantity;
+totalPrice += item.price * item.quantity;
+
+const itemDiv = document.createElement('div');
+itemDiv.classList.add('cart-item');
+itemDiv.innerHTML = `
+<img src="${item.image}" alt="${item.name}">
+<div class="cart-item-details">
+<h4>${item.name}</h4>
+<p>₹${item.price} x ${item.quantity} = ₹${item.price * item.quantity}</p>
+</div>
+<div class="cart-item-actions">
+<button class="qty-btn" onclick="updateQuantity('${item.name}', -1)">-</button>
+<span>${item.quantity}</span>
+<button class="qty-btn" onclick="updateQuantity('${item.name}', 1)">+</button>
+<button class="delete-btn" onclick="removeItem('${item.name}')">Delete</button>
+</div>
+`;
+cartItemsList.appendChild(itemDiv);
+});
+}
+cartCount.innerText = totalCount;
+cartTotal.innerText = '₹' + totalPrice;
+}
+
+function placeOrder() {
+if (cart.length === 0) { alert("Your cart is empty!"); return; }
+
+let tableNumber = prompt("Please enter your Table Number:");
+if (tableNumber === null || tableNumber.trim() === "") { alert("Order cancelled."); return; }
+
+tableNumber = tableNumber.trim();
+let orderId = Math.floor(100 + Math.random() * 900);
+let newCartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+activeOrders = JSON.parse(localStorage.getItem('campusBiteOrders')) || {};
+
+let formattedItems = cart.map(item => ({ ...item, status: "Preparing" }));
+
+if (activeOrders[tableNumber]) {
+formattedItems.forEach(newItem => {
+const existingItem = activeOrders[tableNumber].items.find(item => item.name === newItem.name);
+if (existingItem) { existingItem.quantity += newItem.quantity; } 
+else { activeOrders[tableNumber].items.push(newItem); }
+});
+activeOrders[tableNumber].total += newCartTotal;
+} else {
+activeOrders[tableNumber] = {
+orderId: orderId,
+items: formattedItems,
+total: newCartTotal,
+time: currentTime
+};
+}
+
+localStorage.setItem('campusBiteOrders', JSON.stringify(activeOrders));
+cart = [];
+updateCartUI();
+toggleCart();
+updateWaiterPanel();
+alert(`Order placed successfully for Table ${tableNumber}!`);
+}
+
+function updateWaiterPanel() {
+const waiterTableList = document.getElementById('waiterTableList');
+waiterTableList.innerHTML = '';
+
+activeOrders = JSON.parse(localStorage.getItem('campusBiteOrders')) || {};
+const tables = Object.keys(activeOrders);
+
+if (tables.length === 0) {
+waiterTableList.innerHTML = '<span style="color: #888; font-size: 12px; font-weight: normal;">No active orders</span>';
+return;
+}
+
+tables.forEach(table => {
+const btn = document.createElement('button');
+btn.classList.add('table-badge');
+btn.innerText = `Table ${table}`;
+btn.style.opacity = (selectedTableForView === table) ? "0.6" : "1";
+btn.onclick = () => viewTableOrder(table);
+waiterTableList.appendChild(btn);
+});
+}
+
+// Notification Engine
+let previousOrderState = JSON.stringify(activeOrders);
+
+function checkLiveOrdersForNotifications() {
+let currentOrders = JSON.parse(localStorage.getItem('campusBiteOrders')) || {};
+let prevOrders = JSON.parse(previousOrderState) || {};
+
+for (let table in currentOrders) {
+if (prevOrders[table]) {
+currentOrders[table].items.forEach((item, index) => {
+let prevItem = prevOrders[table].items[index];
+if (prevItem && prevItem.status === 'Preparing' && item.status === 'Ready') {
+let msg = `🔔 Table ${table}: Order is ready. Please collect from the kitchen.`;
+
+let existingNotif = waiterNotifications.find(n => n.table === table && n.unread);
+if (!existingNotif) {
+waiterNotifications.unshift({
+id: Date.now() + Math.random(),
+table: table,
+message: msg,
+unread: true
+});
+localStorage.setItem('campusBiteNotifs', JSON.stringify(waiterNotifications));
+showToast(msg);
+playAudioBeep();
+}
+}
+});
+}
+}
+previousOrderState = JSON.stringify(currentOrders);
+updateNotificationBadge();
+}
+
+function showToast(text) {
+const container = document.getElementById('notification-container');
+const toast = document.createElement('div');
+toast.classList.add('toast-notification');
+toast.innerHTML = `<span>${text}</span>`;
+container.appendChild(toast);
+setTimeout(() => { toast.remove(); }, 5000);
+}
+
+function playAudioBeep() {
+try {
+let ctx = new (window.AudioContext || window.webkitAudioContext)();
+let osc = ctx.createOscillator();
+let gain = ctx.createGain();
+osc.type = 'sine'; osc.frequency.value = 587.33;
+gain.gain.setValueAtTime(0.1, ctx.currentTime);
+osc.connect(gain); gain.connect(ctx.destination);
+osc.start(); osc.stop(ctx.currentTime + 0.2);
+} catch(e) {}
+}
+
+function updateNotificationBadge() {
+waiterNotifications = JSON.parse(localStorage.getItem('campusBiteNotifs')) || [];
+const unreadCount = waiterNotifications.filter(n => n.unread).length;
+const badge = document.getElementById('notification-badge');
+if (unreadCount > 0) {
+badge.style.display = 'inline-block';
+badge.innerText = unreadCount;
+} else {
+badge.style.display = 'none';
+}
+}
+
+function updateNotificationsUI() {
+waiterNotifications = JSON.parse(localStorage.getItem('campusBiteNotifs')) || [];
+const list = document.getElementById('notificationsList');
+list.innerHTML = '';
+
+if (waiterNotifications.length === 0) {
+list.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">No notifications</p>';
+return;
+}
+
+waiterNotifications.forEach((notif) => {
+const itemDiv = document.createElement('div');
+itemDiv.classList.add('cart-item');
+itemDiv.style.cursor = 'pointer';
+itemDiv.style.background = notif.unread ? '#eef7ff' : '#fff';
+itemDiv.innerHTML = `
+<div class="cart-item-details" style="padding: 5px;">
+<p style="font-size:13px; color:#333; font-weight:${notif.unread ? 'bold' : 'normal'};">${notif.message}</p>
+<span style="font-size:11px; color:#007bff;">Click to view complete order details</span>
+</div>
+`;
+itemDiv.onclick = () => {
+notif.unread = false;
+localStorage.setItem('campusBiteNotifs', JSON.stringify(waiterNotifications));
+updateNotificationBadge();
+closeAllModals();
+viewTableOrder(notif.table);
+};
+list.appendChild(itemDiv);
+});
+}
+
+function viewTableOrder(tableNumber) {
+selectedTableForView = tableNumber;
+updateWaiterPanel();
+
+activeOrders = JSON.parse(localStorage.getItem('campusBiteOrders')) || {};
+const orderData = activeOrders[tableNumber];
+if(!orderData) { selectedTableForView = null; updateWaiterPanel(); return; }
+
+const modalTableTitle = document.getElementById('modalTableTitle');
+const orderModalItemsList = document.getElementById('orderModalItemsList');
+const orderModalTotal = document.getElementById('orderModalTotal');
+const paymentButtonsContainer = document.getElementById('paymentButtonsContainer');
+const paymentWarning = document.getElementById('paymentWarning');
+
+modalTableTitle.innerText = `Order ID: #${orderData.orderId} | Table ${tableNumber}`;
+orderModalItemsList.innerHTML = '';
+
+let allItemsServed = true;
+
+orderData.items.forEach((item, index) => {
+let statusClass = 'status-ready-badge';
+let buttonText = 'Mark as Served';
+let actionAttr = '';
+
+if (item.status === 'Ready') {
+actionAttr = `onclick="markItemServed('${tableNumber}', ${index})" style="cursor:pointer;"`;
+} else if (item.status === 'Served') {
+statusClass = 'status-served-badge';
+buttonText = 'Served ✓';
+} else {
+statusClass = 'status-served-badge';
+buttonText = 'Preparing...';
+}
+
+if (item.status !== 'Served') { allItemsServed = false; }
+
+const itemDiv = document.createElement('div');
+itemDiv.classList.add('cart-item');
+itemDiv.innerHTML = `
+<img src="${item.image}" alt="${item.name}">
+<div class="cart-item-details">
+<h4>${item.name}</h4>
+<p>Qty: ${item.quantity} | Price: ₹${item.price} each</p>
+<p style="color:#555;">Status: <b>${item.status}</b></p>
+${item.status === 'Ready' ? `<button class="waiter-action-btn ${statusClass}" ${actionAttr}>${buttonText}</button>` : ''}
+</div>
+`;
+orderModalItemsList.appendChild(itemDiv);
+});
+
+orderModalTotal.innerText = `₹${orderData.total}`;
+
+if (!allItemsServed) {
+paymentButtonsContainer.classList.add('disabled');
+paymentWarning.style.display = 'block';
+} else {
+paymentButtonsContainer.classList.remove('disabled');
+paymentWarning.style.display = 'none';
+}
+
+const modal = document.getElementById('orderModal');
+if (!modal.classList.contains('open')) { 
+modal.classList.add('open'); 
+updateBackdrop();
+}
+}
+
+function markItemServed(tableNumber, itemIndex) {
+activeOrders = JSON.parse(localStorage.getItem('campusBiteOrders')) || {};
+if (!activeOrders[tableNumber]) return;
+
+if (activeOrders[tableNumber].items[itemIndex].status === 'Ready') {
+activeOrders[tableNumber].items[itemIndex].status = 'Served';
+localStorage.setItem('campusBiteOrders', JSON.stringify(activeOrders));
+
+waiterNotifications = waiterNotifications.filter(n => n.table !== tableNumber);
+localStorage.setItem('campusBiteNotifs', JSON.stringify(waiterNotifications));
+updateNotificationBadge();
+
+viewTableOrder(tableNumber);
+}
+}
+
+function completePayment(method) {
+if (!selectedTableForView) return;
+const table = selectedTableForView;
+activeOrders = JSON.parse(localStorage.getItem('campusBiteOrders')) || {};
+if (!activeOrders[table]) return;
+
+const allServed = activeOrders[table].items.every(i => i.status === 'Served');
+if (!allServed) { alert("Cannot process payment! Not all items are served."); return; }
+
+const completedOrder = activeOrders[table];
+
+// Formats sales record and saves it to sales history for the admin panel
+const salesRecord = {
+table: table,
+orderId: completedOrder.orderId,
+items: completedOrder.items,
+total: completedOrder.total,
+paymentMethod: method,
+completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+};
+
+let salesHistory = JSON.parse(localStorage.getItem('campusBiteSalesHistory')) || [];
+salesHistory.push(salesRecord);
+localStorage.setItem('campusBiteSalesHistory', JSON.stringify(salesHistory));
+
+alert(`Payment of ₹${completedOrder.total} completed via ${method}!`);
+delete activeOrders[table];
+localStorage.setItem('campusBiteOrders', JSON.stringify(activeOrders));
+
+waiterNotifications = waiterNotifications.filter(n => n.table !== table);
+localStorage.setItem('campusBiteNotifs', JSON.stringify(waiterNotifications));
+updateNotificationBadge();
+
+selectedTableForView = null;
+updateWaiterPanel();
+closeAllModals();
+}
+
+updateWaiterPanel();
+updateNotificationBadge();
+
+setInterval(() => {
+checkLiveOrdersForNotifications();
+if (selectedTableForView) { viewTableOrder(selectedTableForView); }
+if (document.getElementById('notificationsModal').classList.contains('open')) { updateNotificationsUI(); }
+updateWaiterPanel();
+}, 2000);
+</script>
+
+</body>
+</html>
